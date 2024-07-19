@@ -1,5 +1,5 @@
-
 import os
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -14,12 +14,17 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
 
-    sdf = os.path.join(
+    sdf_xacro = os.path.join(
         get_package_share_directory('turtlebot3'),
-        'models', 'turtlebot3', 'model.sdf')
+        'models', 'turtlebot3', 'model.sdf.xacro')
 
-    doc = xacro.parse(open(sdf))
-    xacro.process_doc(doc)
+    sdf = xacro.process_file(
+        sdf_xacro,
+        mappings={
+            "turtlebot3",
+            get_package_share_directory("turtlebot3"),
+        },
+    )
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -32,5 +37,5 @@ def generate_launch_description():
             name='robot_state_publisher',
             output='screen',
             parameters=[{'use_sim_time': use_sim_time,
-                         'robot_description': doc.toxml()}]),
+                         'robot_description': sdf.toprettyxml(indent='  ')}]),
     ])
